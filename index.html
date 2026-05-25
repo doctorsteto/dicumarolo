@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -85,15 +85,37 @@
             background-color: white;
             font-size: 0.85rem;
         }
+        /* Stile del nuovo pulsante WhatsApp */
+        .btn-whatsapp {
+            display: block;
+            width: 100%;
+            background-color: #25D366;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            text-decoration: none;
+        }
+        .btn-whatsapp:hover {
+            background-color: #128C7E;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Tracciamento Dosaggio Coumadin</h1>
-    <p class="info">Nota: 1 compressa = 5mg. Seleziona la dose giornaliera (fino a 2 compresse).</p>
+    <p class="info">Nota: 1 compressa = 5mg. I dati si salvano automaticamente nel browser.</p>
     
     <div id="contenitoreSettimane"></div>
+
+    <button class="btn-whatsapp" onclick="inviaSuWhatsApp()">Invia i dati al Medico tramite WhatsApp</button>
 </div>
 
 <script>
@@ -103,6 +125,7 @@
 
     const contenitore = document.getElementById('contenitoreSettimane');
 
+    // 1. GENERAZIONE INTERFACCIA
     for (let s = 1; s <= numeroSettimane; s++) {
         const settimanaBlocco = document.createElement('div');
         settimanaBlocco.className = 'settimana-blocco';
@@ -124,10 +147,9 @@
 
             const selectId = `select-s${s}-g${indiceGiorno}`;
 
-            // Qui abbiamo modificato i testi visibili lasciando inalterati i "value" numerici per il calcolo
             giornoCard.innerHTML = `
                 <label>${giornoNome}</label>
-                <select id="${selectId}" onchange="calcolaTotali()">
+                <select id="${selectId}" onchange="gestisciCambiamento()">
                     <option value="0">0 (0 mg)</option>
                     <option value="1">1/4 cp (1.25 mg)</option>
                     <option value="2">1/2 cp (2.50 mg)</option>
@@ -146,6 +168,13 @@
         contenitore.appendChild(settimanaBlocco);
     }
 
+    // Funzione intermedia per calcolare e salvare contemporaneamente
+    function gestisciCambiamento() {
+        calcolaTotali();
+        salvaDatiNelBrowser();
+    }
+
+    // 2. CALCOLO DEI TOTALI
     function calcolaTotali() {
         for (let s = 1; s <= numeroSettimane; s++) {
             let sommaSettimanaleMg = 0;
@@ -163,7 +192,58 @@
         }
     }
 
-    calcolaTotali();
+    // 3. SALVATAGGIO AUTOMATICO (LocalStorage)
+    function salvaDatiNelBrowser() {
+        for (let s = 1; s <= numeroSettimane; s++) {
+            for (let g = 0; g < 7; g++) {
+                const id = `select-s${s}-g${g}`;
+                const valore = document.getElementById(id).value;
+                localStorage.setItem(id, valore); // Salva il valore nella memoria del telefono
+            }
+        }
+    }
+
+    // 4. CARICAMENTO DATI ALL'AVVIO
+    function caricaDatiSalvati() {
+        for (let s = 1; s <= numeroSettimane; s++) {
+            for (let g = 0; g < 7; g++) {
+                const id = `select-s${s}-g${g}`;
+                const valoreSalvato = localStorage.getItem(id);
+                if (valoreSalvato !== null) {
+                    document.getElementById(id).value = valoreSalvato;
+                }
+            }
+        }
+        calcolaTotali(); // Ricalcola tutto dopo aver ripristinato i dati
+    }
+
+    // 5. GENERAZIONE DEL MESSAGGIO WHATSAPP
+    function inviaSuWhatsApp() {
+        let testoMessaggio = "🩺 *REPORT DOSAGGIO COUMADIN*\n\n";
+
+        for (let s = 1; s <= numeroSettimane; s++) {
+            testoMessaggio += `*SETTIMANA ${s}*\n`;
+            
+            for (let g = 0; g < 7; g++) {
+                const selectElement = document.getElementById(`select-s${s}-g${g}`);
+                const testoDose = selectElement.options[selectElement.selectedIndex].text;
+                testoMessaggio += `- ${nomiGiorni[g]}: ${testoDose}\n`;
+            }
+            
+            const totaleSettimanale = document.getElementById(`totale-sett-${s}`).textContent;
+            testoMessaggio += `👉 *Totale Settimanale: ${totaleSettimanale} mg*\n\n`;
+        }
+
+        // Converte il testo in un formato sicuro per i link web (URL Encoding)
+        const testoCodificato = encodeURIComponent(testoMessaggio);
+        
+        // Crea il link universale di WhatsApp ed esegue l'apertura
+        const urlWhatsApp = `https://wa.me/?text=${testoCodificato}`;
+        window.open(urlWhatsApp, '_blank');
+    }
+
+    // Esegui il caricamento dei dati vecchi all'apertura della pagina
+    caricaDatiSalvati();
 </script>
 
 </body>
