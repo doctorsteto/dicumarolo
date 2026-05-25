@@ -51,8 +51,16 @@
         }
         .totale-parziale {
             font-weight: bold;
-            color: #2980b9;
+            color: #2c3e50;
         }
+        
+        /* NUOVO STILE: Questo colora il dosaggio totale settimanale (es. 15.00 mg) */
+        .evidenzia-mg {
+            color: #e74c3c; /* Un rosso acceso/corallo ben visibile */
+            font-size: 1.3rem; /* Lo rendiamo anche leggermente più grande */
+            font-weight: bold;
+        }
+
         .griglia-giorni {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -85,7 +93,6 @@
             background-color: white;
             font-size: 0.85rem;
         }
-        /* Stile del nuovo pulsante WhatsApp */
         .btn-whatsapp {
             display: block;
             width: 100%;
@@ -125,16 +132,17 @@
 
     const contenitore = document.getElementById('contenitoreSettimane');
 
-    // 1. GENERAZIONE INTERFACCIA
     for (let s = 1; s <= numeroSettimane; s++) {
         const settimanaBlocco = document.createElement('div');
         settimanaBlocco.className = 'settimana-blocco';
 
         const intestazione = document.createElement('div');
         intestazione.className = 'settimana-titolo';
+        
+        // Abbiamo applicato la classe "evidenzia-mg" al contenitore del numero
         intestazione.innerHTML = `
             <span>Settimana ${s}</span>
-            <span class="totale-parziale">Totale: <span id="totale-sett-${s}">0.00</span> mg</span>
+            <span class="totale-parziale">Totale: <span id="totale-sett-${s}" class="evidenzia-mg">0.00</span> mg</span>
         `;
         settimanaBlocco.appendChild(intestazione);
 
@@ -168,13 +176,11 @@
         contenitore.appendChild(settimanaBlocco);
     }
 
-    // Funzione intermedia per calcolare e salvare contemporaneamente
     function gestisciCambiamento() {
         calcolaTotali();
         salvaDatiNelBrowser();
     }
 
-    // 2. CALCOLO DEI TOTALI
     function calcolaTotali() {
         for (let s = 1; s <= numeroSettimane; s++) {
             let sommaSettimanaleMg = 0;
@@ -192,18 +198,16 @@
         }
     }
 
-    // 3. SALVATAGGIO AUTOMATICO (LocalStorage)
     function salvaDatiNelBrowser() {
         for (let s = 1; s <= numeroSettimane; s++) {
             for (let g = 0; g < 7; g++) {
                 const id = `select-s${s}-g${g}`;
                 const valore = document.getElementById(id).value;
-                localStorage.setItem(id, valore); // Salva il valore nella memoria del telefono
+                localStorage.setItem(id, valore);
             }
         }
     }
 
-    // 4. CARICAMENTO DATI ALL'AVVIO
     function caricaDatiSalvati() {
         for (let s = 1; s <= numeroSettimane; s++) {
             for (let g = 0; g < 7; g++) {
@@ -214,10 +218,9 @@
                 }
             }
         }
-        calcolaTotali(); // Ricalcola tutto dopo aver ripristinato i dati
+        calcolaTotali();
     }
 
-    // 5. GENERAZIONE DEL MESSAGGIO WHATSAPP
     function inviaSuWhatsApp() {
         let testoMessaggio = "🩺 *REPORT DOSAGGIO COUMADIN*\n\n";
 
@@ -234,17 +237,14 @@
             testoMessaggio += `👉 *Totale Settimanale: ${totaleSettimanale} mg*\n\n`;
         }
 
-        // Converte il testo in un formato sicuro per i link web (URL Encoding)
         const testoCodificato = encodeURIComponent(testoMessaggio);
-        
-        // Crea il link universale di WhatsApp ed esegue l'apertura
         const urlWhatsApp = `https://wa.me/?text=${testoCodificato}`;
         window.open(urlWhatsApp, '_blank');
     }
 
-    // Esegui il caricamento dei dati vecchi all'apertura della pagina
     caricaDatiSalvati();
 </script>
 
 </body>
 </html>
+
