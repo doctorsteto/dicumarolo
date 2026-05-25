@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 950px;
             margin: 0 auto;
             background: white;
             padding: 25px;
@@ -54,10 +54,10 @@
             color: #2c3e50;
         }
         
-        /* NUOVO STILE: Questo colora il dosaggio totale settimanale (es. 15.00 mg) */
+        /* Stile del totale settimanale (Rosso Corallo) */
         .evidenzia-mg {
-            color: #e74c3c; /* Un rosso acceso/corallo ben visibile */
-            font-size: 1.3rem; /* Lo rendiamo anche leggermente più grande */
+            color: #e74c3c;
+            font-size: 1.3rem;
             font-weight: bold;
         }
 
@@ -68,31 +68,37 @@
         }
         @media (max-width: 768px) {
             .griglia-giorni {
-                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
         }
         .giorno-card {
             background: #f8fafc;
             border: 1px solid #cbd5e1;
-            padding: 10px;
+            padding: 12px 8px;
             border-radius: 6px;
             text-align: center;
         }
         .giorno-card label {
             display: block;
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #475569;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
+        
+        /* NUOVO STILE: Menu a tendina dei singoli giorni più grandi e in BLU */
         .giorno-card select {
             width: 100%;
-            padding: 6px;
+            padding: 8px 4px;
             border-radius: 4px;
-            border: 1px solid #cbd5e1;
+            border: 2px solid #3498db; /* Bordo blu per risaltare */
             background-color: white;
-            font-size: 0.85rem;
+            color: #2980b9; /* Testo Blu */
+            font-size: 1.05rem; /* Carattere più grande */
+            font-weight: bold; /* Testo in grassetto */
+            cursor: pointer;
         }
+        
         .btn-whatsapp {
             display: block;
             width: 100%;
@@ -118,7 +124,7 @@
 
 <div class="container">
     <h1>Tracciamento Dosaggio Coumadin</h1>
-    <p class="info">Nota: 1 compressa = 5mg. I dati si salvano automaticamente nel browser.</p>
+    <p class="info">Nota: 1 compressa = 5mg. Scegli il dosaggio aiutandoti con le icone delle compresse.</p>
     
     <div id="contenitoreSettimane"></div>
 
@@ -139,7 +145,6 @@
         const intestazione = document.createElement('div');
         intestazione.className = 'settimana-titolo';
         
-        // Abbiamo applicato la classe "evidenzia-mg" al contenitore del numero
         intestazione.innerHTML = `
             <span>Settimana ${s}</span>
             <span class="totale-parziale">Totale: <span id="totale-sett-${s}" class="evidenzia-mg">0.00</span> mg</span>
@@ -155,18 +160,19 @@
 
             const selectId = `select-s${s}-g${indiceGiorno}`;
 
+            // Abbiamo inserito le icone Unicode direttamente dentro le opzioni di testo
             giornoCard.innerHTML = `
                 <label>${giornoNome}</label>
                 <select id="${selectId}" onchange="gestisciCambiamento()">
-                    <option value="0">0 (0 mg)</option>
-                    <option value="1">1/4 cp (1.25 mg)</option>
-                    <option value="2">1/2 cp (2.50 mg)</option>
-                    <option value="3">3/4 cp (3.75 mg)</option>
-                    <option value="4">1 cp (5.00 mg)</option>
-                    <option value="5">1 cp + 1/4 (6.25 mg)</option>
-                    <option value="6">1 cp e 1/2 (7.50 mg)</option>
-                    <option value="7">1 cp + 3/4 (8.75 mg)</option>
-                    <option value="8">2 cp (10.00 mg)</option>
+                    <option value="0">⚪ 0 cp (0 mg)</option>
+                    <option value="1">◔ 1/4 cp (1.25 mg)</option>
+                    <option value="2">◑ 1/2 cp (2.50 mg)</option>
+                    <option value="3">◕ 3/4 cp (3.75 mg)</option>
+                    <option value="4">⚫ 1 cp (5.00 mg)</option>
+                    <option value="5">⚫◔ 1 cp + 1/4 (6.25 mg)</option>
+                    <option value="6">⚫◑ 1 cp e 1/2 (7.50 mg)</option>
+                    <option value="7">⚫◕ 1 cp + 3/4 (8.75 mg)</option>
+                    <option value="8">⚫⚫ 2 cp (10.00 mg)</option>
                 </select>
             `;
             grigliaGiorni.appendChild(giornoCard);
@@ -247,4 +253,3 @@
 
 </body>
 </html>
-
