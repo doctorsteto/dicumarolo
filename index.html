@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoraggio Dosaggio Coumadin - 4 Settimane</title>
+    <title>Monitoraggio Coumadin e INR - 4 Settimane</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 950px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             padding: 25px;
@@ -29,7 +29,24 @@
             text-align: center;
             color: #7f8c8d;
             font-style: italic;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+        .selettori-periodo {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .selettori-periodo select {
+            padding: 8px 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            border: 2px solid #3498db;
+            border-radius: 4px;
         }
         .settimana-blocco {
             background: #fdfefe;
@@ -53,13 +70,11 @@
             font-weight: bold;
             color: #2c3e50;
         }
-        
         .evidenzia-mg {
             color: #e74c3c;
             font-size: 1.3rem;
             font-weight: bold;
         }
-
         .griglia-giorni {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -76,27 +91,50 @@
             padding: 12px 8px;
             border-radius: 6px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         .giorno-card label {
             display: block;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: #475569;
             margin-bottom: 8px;
+            min-height: 34px; /* Evita che le card si sballino se il testo va a capo */
         }
-        
         .giorno-card select {
             width: 100%;
-            padding: 8px 4px;
+            padding: 6px 2px;
             border-radius: 4px;
             border: 2px solid #3498db;
             background-color: white;
             color: #2980b9;
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
+            margin-bottom: 8px;
         }
-        
+        .inr-container {
+            margin-top: 5px;
+        }
+        .inr-container span {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .inr-input {
+            width: 80%;
+            padding: 4px;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
         .btn-whatsapp {
             display: block;
             width: 100%;
@@ -121,63 +159,117 @@
 <body>
 
 <div class="container">
-    <h1>Tracciamento Dosaggio Coumadin</h1>
-    <p class="info">Nota: 1 compressa = 5mg. Seleziona la quantità di compresse assunta ogni giorno.</p>
+    <h1>Tracciamento Coumadin & INR</h1>
+    <p class="info">Seleziona mese/anno, inserisci la dose giornaliera e gli eventuali valori di INR.</p>
     
+    <div class="selettori-periodo">
+        <select id="selettoreMese" onchange="inizializzaCalendario()"></select>
+        <select id="selettoreAnno" onchange="inizializzaCalendario()"></select>
+    </div>
+
     <div id="contenitoreSettimane"></div>
 
-    <button class="btn-whatsapp" onclick="inviaSuWhatsApp()">Invia i dati al Medico tramite WhatsApp</button>
+    <button class="btn-whatsapp" onclick="inviaSuWhatsApp()">Invia il Report al Medico via WhatsApp</button>
 </div>
 
 <script>
     const numeroSettimane = 4;
     const mgPerQuarto = 1.25; 
     const nomiGiorni = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+    const mesi dellAnno = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 
-    const contenitore = document.getElementById('contenitoreSettimane');
+    // Popoliamo i selettori di mese e anno all'avvio
+    const selMese = document.getElementById('selettoreMese');
+    const selAnno = document.getElementById('selettoreAnno');
+    
+    mesi dellAnno.forEach((mese, index) => {
+        let opt = document.createElement('option');
+        opt.value = index;
+        opt.textContent = mese;
+        selMese.appendChild(opt);
+    });
 
-    for (let s = 1; s <= numeroSettimane; s++) {
-        const settimanaBlocco = document.createElement('div');
-        settimanaBlocco.className = 'settimana-blocco';
+    const annoCorrente = new Date().getFullYear();
+    for (let a = annoCorrente - 1; a <= annoCorrente + 2; a++) {
+        let opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        selAnno.appendChild(opt);
+    }
 
-        const intestazione = document.createElement('div');
-        intestazione.className = 'settimana-titolo';
-        
-        intestazione.innerHTML = `
-            <span>Settimana ${s}</span>
-            <span class="totale-parziale">Totale: <span id="totale-sett-${s}" class="evidenzia-mg">0.00</span> mg</span>
-        `;
-        settimanaBlocco.appendChild(intestazione);
+    // Impostiamo mese e anno corrente di default
+    selMese.value = new Date().getMese || new Date().getMonth();
+    selAnno.value = annoCorrente;
 
-        const grigliaGiorni = document.createElement('div');
-        grigliaGiorni.className = 'griglia-giorni';
+    function inizializzaCalendario() {
+        const contenitore = document.getElementById('contenitoreSettimane');
+        contenitore.innerHTML = ""; // Svuota il vecchio calendario
 
-        nomiGiorni.forEach((giornoNome, indiceGiorno) => {
-            const giornoCard = document.createElement('div');
-            giornoCard.className = 'giorno-card';
+        const meseScelto = parseInt(selMese.value);
+        const annoScelto = parseInt(selAnno.value);
 
-            const selectId = `select-s${s}-g${indiceGiorno}`;
+        // Trova il primo lunedì disponibile per iniziare la griglia in modo sensato
+        let dataCorrente = new Date(annoScelto, meseScelto, 1);
+        while (dataCorrente.getDay() !== 1) { // 1 significa Lunedì
+            dataCorrente.setDate(dataCorrente.getDate() - 1);
+        }
 
-            // Nuovo set di icone a barre progressive perfettamente stabili su smartphone
-            giornoCard.innerHTML = `
-                <label>${giornoNome}</label>
-                <select id="${selectId}" onchange="gestisciCambiamento()">
-                    <option value="0">░ 0</option>
-                    <option value="1">█ 1/4</option>
-                    <option value="2">██ 1/2</option>
-                    <option value="3">███ 3/4</option>
-                    <option value="4">████ 1 cp</option>
-                    <option value="5">█████ 1 + 1/4</option>
-                    <option value="6">██████ 1 e 1/2</option>
-                    <option value="7">███████ 1 + 3/4</option>
-                    <option value="8">████████ 2 cp</option>
-                </select>
+        for (let s = 1; s <= numeroSettimane; s++) {
+            const settimanaBlocco = document.createElement('div');
+            settimanaBlocco.className = 'settimana-blocco';
+
+            const intestazione = document.createElement('div');
+            intestazione.className = 'settimana-titolo';
+            intestazione.innerHTML = `
+                <span>Settimana ${s}</span>
+                <span class="totale-parziale">Totale: <span id="totale-sett-${s}" class="evidenzia-mg">0.00</span> mg</span>
             `;
-            grigliaGiorni.appendChild(giornoCard);
-        });
+            settimanaBlocco.appendChild(intestazione);
 
-        settimanaBlocco.appendChild(grigliaGiorni);
-        contenitore.appendChild(settimanaBlocco);
+            const grigliaGiorni = document.createElement('div');
+            grigliaGiorni.className = 'griglia-giorni';
+
+            nomiGiorni.forEach((giornoNome) => {
+                const giornoCard = document.createElement('div');
+                giornoCard.className = 'giorno-card';
+
+                const giornoDelMese = dataCorrente.getDate();
+                const meseDelGiorno = dataCorrente.getMonth();
+                const etichettaData = `${giornoNome} ${giornoDelMese} ${mesi dellAnno[meseDelGiorno].substring(0,3)}`;
+
+                // Identificativi univoci basati su data reale (Mese-Giorno) per non perdere i dati al cambio mese
+                const chiaveBase = `data-${annoScelto}-${meseDelGiorno}-${giornoDelMese}`;
+                const selectId = `select-${chiaveBase}`;
+                const inrId = `inr-${chiaveBase}`;
+
+                giornoCard.innerHTML = `
+                    <label>${etichettaData}</label>
+                    <select id="${selectId}" data-settimana="${s}" onchange="gestisciCambiamento()">
+                        <option value="0">Explicit: ░ 0</option>
+                        <option value="1">█ 1/4</option>
+                        <option value="2">██ 1/2</option>
+                        <option value="3">███ 3/4</option>
+                        <option value="4">████ 1 cp</option>
+                        <option value="5">█████ 1 + 1/4</option>
+                        <option value="6">██████ 1 e 1/2</option>
+                        <option value="7">███████ 1 + 3/4</option>
+                        <option value="8">████████ 2 cp</option>
+                    </select>
+                    <div class="inr-container">
+                        <span>INR:</span>
+                        <input type="number" step="0.1" placeholder="--" id="${inrId}" class="inr-input" oninput="salvaDatiNelBrowser()">
+                    </div>
+                `;
+                grigliaGiorni.appendChild(giornoCard);
+                
+                // Avanza al giorno successivo
+                dataCorrente.setDate(dataCorrente.getDate() + 1);
+            });
+
+            settimanaBlocco.appendChild(grigliaGiorni);
+            contenitore.appendChild(settimanaBlocco);
+        }
+        caricaDatiSalvati();
     }
 
     function gestisciCambiamento() {
@@ -188,54 +280,68 @@
     function calcolaTotali() {
         for (let s = 1; s <= numeroSettimane; s++) {
             let sommaSettimanaleMg = 0;
-
-            for (let g = 0; g < 7; g++) {
-                const selectElement = document.getElementById(`select-s${s}-g${g}`);
-                if (selectElement) {
-                    const quartiSelezionati = parseInt(selectElement.value);
-                    sommaSettimanaleMg += quartiSelezionati * mgPerQuarto;
-                }
-            }
+            // Trova tutti i select appartenenti a questa specifica settimana visibile
+            const elementiSelect = document.querySelectorAll(`select[data-settimana="${s}"]`);
+            elementiSelect.forEach(select => {
+                const quartiSelezionati = parseInt(select.value);
+                sommaSettimanaleMg += quartiSelezionati * mgPerQuarto;
+            });
 
             const elementoTotale = document.getElementById(`totale-sett-${s}`);
-            elementoTotale.textContent = sommaSettimanaleMg.toFixed(2);
+            if (elementoTotale) elementoTotale.textContent = sommaSettimanaleMg.toFixed(2);
         }
     }
 
     function salvaDatiNelBrowser() {
-        for (let s = 1; s <= numeroSettimane; s++) {
-            for (let g = 0; g < 7; g++) {
-                const id = `select-s${s}-g${g}`;
-                const valore = document.getElementById(id).value;
-                localStorage.setItem(id, valore);
-            }
-        }
+        // Salva lo stato di tutti i select e input presenti nella pagina corrente
+        const tuttiISelect = document.querySelectorAll('select[id^="select-data-"]');
+        tuttiISelect.forEach(select => {
+            localStorage.setItem(select.id, select.value);
+        });
+
+        const tuttiGliInput = document.querySelectorAll('.inr-input');
+        tuttiGliInput.forEach(input => {
+            localStorage.setItem(input.id, input.value);
+        });
     }
 
     function caricaDatiSalvati() {
-        for (let s = 1; s <= numeroSettimane; s++) {
-            for (let g = 0; g < 7; g++) {
-                const id = `select-s${s}-g${g}`;
-                const valoreSalvato = localStorage.getItem(id);
-                if (valoreSalvato !== null) {
-                    document.getElementById(id).value = valoreSalvato;
-                }
-            }
-        }
+        const tuttiISelect = document.querySelectorAll('select[id^="select-data-"]');
+        tuttiISelect.forEach(select => {
+            const valoreSalvato = localStorage.getItem(select.id);
+            if (valoreSalvato !== null) select.value = valoreSalvato;
+        });
+
+        const tuttiGliInput = document.querySelectorAll('.inr-input');
+        tuttiGliInput.forEach(input => {
+            const valoreSalvato = localStorage.getItem(input.id);
+            if (valoreSalvato !== null) input.value = valoreSalvato;
+        });
         calcolaTotali();
     }
 
     function inviaSuWhatsApp() {
-        let testoMessaggio = "🩺 *REPORT DOSAGGIO COUMADIN*\n\n";
+        const meseTesto = selMese.options[selMese.selectedIndex].text;
+        const annoTesto = selAnno.value;
+        
+        let testoMessaggio = `🩺 *REPORT TERAPIA COUMADIN & INR*\n`;
+        testoMessaggio += `📅 *Periodo:* ${meseTesto} ${annoTesto}\n\n`;
 
         for (let s = 1; s <= numeroSettimane; s++) {
             testoMessaggio += `*SETTIMANA ${s}*\n`;
             
-            for (let g = 0; g < 7; g++) {
-                const selectElement = document.getElementById(`select-s${s}-g${g}`);
-                const testoDose = selectElement.options[selectElement.selectedIndex].text;
-                testoMessaggio += `- ${nomiGiorni[g]}: ${testoDose}\n`;
-            }
+            const elementiSelect = document.querySelectorAll(`select[data-settimana="${s}"]`);
+            elementiSelect.forEach(select => {
+                const idBase = select.id.replace('select-', '');
+                const labelElemento = select.previousElementSibling.textContent;
+                const testoDose = select.options[select.selectedIndex].text;
+                
+                // Recupera l'INR corrispondente a questo giorno
+                const valoreInr = document.getElementById(`inr-${idBase}`).value;
+                const stringaInr = valoreInr ? ` [INR: ${valoreInr}]` : '';
+
+                testoMessaggio += `- ${labelElemento}: ${testoDose}${stringaInr}\n`;
+            });
             
             const totaleSettimanale = document.getElementById(`totale-sett-${s}`).textContent;
             testoMessaggio += `👉 *Totale Settimanale: ${totaleSettimanale} mg*\n\n`;
@@ -246,7 +352,8 @@
         window.open(urlWhatsApp, '_blank');
     }
 
-    caricaDatiSalvati();
+    // Avvio del sistema
+    inizializzaCalendario();
 </script>
 
 </body>
