@@ -47,6 +47,7 @@
             color: #2c3e50;
             border: 2px solid #3498db;
             border-radius: 4px;
+            background: white;
         }
         .settimana-blocco {
             background: #fdfefe;
@@ -101,7 +102,7 @@
             font-size: 0.9rem;
             color: #475569;
             margin-bottom: 8px;
-            min-height: 34px; /* Evita che le card si sballino se il testo va a capo */
+            min-height: 34px;
         }
         .giorno-card select {
             width: 100%;
@@ -159,7 +160,7 @@
 <body>
 
 <div class="container">
-    <h1>SCHEMA dosaggio Coumadin & INR</h1>
+    <h1>Tracciamento Coumadin & INR</h1>
     <p class="info">Seleziona mese/anno, inserisci la dose giornaliera e gli eventuali valori di INR.</p>
     
     <div class="selettori-periodo">
@@ -175,21 +176,24 @@
 <script>
     const numeroSettimane = 4;
     const mgPerQuarto = 1.25; 
-    const nomiGiorni = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
-    const mesi dellAnno = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+    const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+    const nomiGiorniUmani = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+    const mesiDellAnno = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 
-    // Popoliamo i selettori di mese e anno all'avvio
     const selMese = document.getElementById('selettoreMese');
     const selAnno = document.getElementById('selettoreAnno');
     
-    mesi dellAnno.forEach((mese, index) => {
+    // Popola i mesi
+    mesiDellAnno.forEach((mese, index) => {
         let opt = document.createElement('option');
         opt.value = index;
         opt.textContent = mese;
         selMese.appendChild(opt);
     });
 
-    const annoCorrente = new Date().getFullYear();
+    // Popola gli anni
+    const dataOggi = new Date();
+    const annoCorrente = dataOggi.getFullYear();
     for (let a = annoCorrente - 1; a <= annoCorrente + 2; a++) {
         let opt = document.createElement('option');
         opt.value = a;
@@ -197,22 +201,19 @@
         selAnno.appendChild(opt);
     }
 
-    // Impostiamo mese e anno corrente di default
-    selMese.value = new Date().getMese || new Date().getMonth();
+    // Valori iniziali di default corretti
+    selMese.value = dataOggi.getMonth();
     selAnno.value = annoCorrente;
 
     function inizializzaCalendario() {
         const contenitore = document.getElementById('contenitoreSettimane');
-        contenitore.innerHTML = ""; // Svuota il vecchio calendario
+        contenitore.innerHTML = ""; 
 
         const meseScelto = parseInt(selMese.value);
         const annoScelto = parseInt(selAnno.value);
 
-        // Trova il primo lunedì disponibile per iniziare la griglia in modo sensato
+        // Imposta la data al giorno 1 del mese scelto
         let dataCorrente = new Date(annoScelto, meseScelto, 1);
-        while (dataCorrente.getDay() !== 1) { // 1 significa Lunedì
-            dataCorrente.setDate(dataCorrente.getDate() - 1);
-        }
 
         for (let s = 1; s <= numeroSettimane; s++) {
             const settimanaBlocco = document.createElement('div');
@@ -229,15 +230,16 @@
             const grigliaGiorni = document.createElement('div');
             grigliaGiorni.className = 'griglia-giorni';
 
-            nomiGiorni.forEach((giornoNome) => {
+            // Ciclo fisso di 7 giorni (da Lunedì a Domenica)
+            for (let g = 0; g < 7; g++) {
                 const giornoCard = document.createElement('div');
                 giornoCard.className = 'giorno-card';
 
                 const giornoDelMese = dataCorrente.getDate();
                 const meseDelGiorno = dataCorrente.getMonth();
-                const etichettaData = `${giornoNome} ${giornoDelMese} ${mesi dellAnno[meseDelGiorno].substring(0,3)}`;
+                const nomeGiornoSettimana = nomiGiorni[dataCorrente.getDay()];
+                const etichettaData = `${nomeGiornoSettimana} ${giornoDelMese} ${mesiDellAnno[meseDelGiorno].substring(0,3)}`;
 
-                // Identificativi univoci basati su data reale (Mese-Giorno) per non perdere i dati al cambio mese
                 const chiaveBase = `data-${annoScelto}-${meseDelGiorno}-${giornoDelMese}`;
                 const selectId = `select-${chiaveBase}`;
                 const inrId = `inr-${chiaveBase}`;
@@ -262,9 +264,8 @@
                 `;
                 grigliaGiorni.appendChild(giornoCard);
                 
-                // Avanza al giorno successivo
                 dataCorrente.setDate(dataCorrente.getDate() + 1);
-            });
+            }
 
             settimanaBlocco.appendChild(grigliaGiorni);
             contenitore.appendChild(settimanaBlocco);
@@ -280,7 +281,6 @@
     function calcolaTotali() {
         for (let s = 1; s <= numeroSettimane; s++) {
             let sommaSettimanaleMg = 0;
-            // Trova tutti i select appartenenti a questa specifica settimana visibile
             const elementiSelect = document.querySelectorAll(`select[data-settimana="${s}"]`);
             elementiSelect.forEach(select => {
                 const quartiSelezionati = parseInt(select.value);
@@ -293,7 +293,6 @@
     }
 
     function salvaDatiNelBrowser() {
-        // Salva lo stato di tutti i select e input presenti nella pagina corrente
         const tuttiISelect = document.querySelectorAll('select[id^="select-data-"]');
         tuttiISelect.forEach(select => {
             localStorage.setItem(select.id, select.value);
@@ -336,7 +335,6 @@
                 const labelElemento = select.previousElementSibling.textContent;
                 const testoDose = select.options[select.selectedIndex].text;
                 
-                // Recupera l'INR corrispondente a questo giorno
                 const valoreInr = document.getElementById(`inr-${idBase}`).value;
                 const stringaInr = valoreInr ? ` [INR: ${valoreInr}]` : '';
 
@@ -352,7 +350,7 @@
         window.open(urlWhatsApp, '_blank');
     }
 
-    // Avvio del sistema
+    // Avvia il sistema al caricamento della pagina
     inizializzaCalendario();
 </script>
 
