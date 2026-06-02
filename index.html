@@ -177,13 +177,12 @@
     const numeroSettimane = 4;
     const mgPerQuarto = 1.25; 
     const nomiGiorni = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-    const nomiGiorniUmani = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
     const mesiDellAnno = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 
     const selMese = document.getElementById('selettoreMese');
     const selAnno = document.getElementById('selettoreAnno');
     
-    // Popola i mesi
+    // Popola l'elenco dei mesi
     mesiDellAnno.forEach((mese, index) => {
         let opt = document.createElement('option');
         opt.value = index;
@@ -191,7 +190,7 @@
         selMese.appendChild(opt);
     });
 
-    // Popola gli anni
+    // Popola l'elenco degli anni
     const dataOggi = new Date();
     const annoCorrente = dataOggi.getFullYear();
     for (let a = annoCorrente - 1; a <= annoCorrente + 2; a++) {
@@ -201,7 +200,7 @@
         selAnno.appendChild(opt);
     }
 
-    // Valori iniziali di default corretti
+    // Imposta il mese corrente e l'anno corrente come predefiniti
     selMese.value = dataOggi.getMonth();
     selAnno.value = annoCorrente;
 
@@ -212,7 +211,7 @@
         const meseScelto = parseInt(selMese.value);
         const annoScelto = parseInt(selAnno.value);
 
-        // Imposta la data al giorno 1 del mese scelto
+        // Genera la data partendo esattamente dal primo giorno del mese selezionato
         let dataCorrente = new Date(annoScelto, meseScelto, 1);
 
         for (let s = 1; s <= numeroSettimane; s++) {
@@ -230,7 +229,6 @@
             const grigliaGiorni = document.createElement('div');
             grigliaGiorni.className = 'griglia-giorni';
 
-            // Ciclo fisso di 7 giorni (da Lunedì a Domenica)
             for (let g = 0; g < 7; g++) {
                 const giornoCard = document.createElement('div');
                 giornoCard.className = 'giorno-card';
@@ -240,14 +238,16 @@
                 const nomeGiornoSettimana = nomiGiorni[dataCorrente.getDay()];
                 const etichettaData = `${nomeGiornoSettimana} ${giornoDelMese} ${mesiDellAnno[meseDelGiorno].substring(0,3)}`;
 
+                // Chiave salvataggio univoca basata sulla data reale
                 const chiaveBase = `data-${annoScelto}-${meseDelGiorno}-${giornoDelMese}`;
                 const selectId = `select-${chiaveBase}`;
                 const inrId = `inr-${chiaveBase}`;
 
+                // CORRETTO: rimosso il testo "Explicit:" dalla prima opzione
                 giornoCard.innerHTML = `
                     <label>${etichettaData}</label>
                     <select id="${selectId}" data-settimana="${s}" onchange="gestisciCambiamento()">
-                        <option value="0">Explicit: ░ 0</option>
+                        <option value="0">░ 0</option>
                         <option value="1">█ 1/4</option>
                         <option value="2">██ 1/2</option>
                         <option value="3">███ 3/4</option>
@@ -264,6 +264,7 @@
                 `;
                 grigliaGiorni.appendChild(giornoCard);
                 
+                // Passa al giorno successivo
                 dataCorrente.setDate(dataCorrente.getDate() + 1);
             }
 
@@ -350,7 +351,6 @@
         window.open(urlWhatsApp, '_blank');
     }
 
-    // Avvia il sistema al caricamento della pagina
     inizializzaCalendario();
 </script>
 
